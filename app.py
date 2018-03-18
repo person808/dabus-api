@@ -1,15 +1,9 @@
-import os
-import pygtfs
 import requests
 import xmltodict
+from config import API_KEY, schedule
 from flask import Flask, abort, jsonify, make_response
 
-
-basedir = os.path.abspath(os.path.dirname(__file__))
-API_KEY = os.environ.get('DABUS_API_KEY')
-DATABASE_URI = os.environ.get('DATABASE_URL') or os.path.join(basedir, 'gtfs.sqlite')
 app = Flask(__name__)
-schedule = pygtfs.Schedule(DATABASE_URI)
 
 
 def remove_keys(obj, rubbish):

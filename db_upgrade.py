@@ -1,12 +1,11 @@
 import os
 import requests
 import subprocess
+from config import DATABASE_URI
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 # Transitfeed api key
-DATABASE_URI = os.environ.get('DATABASE_URL') or os.path.join(
-    basedir, 'gtfs.sqlite')
 FEED_URL = 'http://webapps.thebus.org/transitdata/Production/google_transit.zip'
 
 response = requests.get(FEED_URL, stream=True)
