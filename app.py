@@ -1,5 +1,6 @@
 import requests
 import xmltodict
+from Arrival import Arrival
 from config import API_KEY, schedule
 from flask import Flask, abort, jsonify, make_response
 
@@ -65,16 +66,9 @@ def get_realtime_stop_arrivals(stop_id):
 def get_scheduled_stop_arrivals(stop_id):
     try:
         stop = schedule.stops_by_id(stop_id)[0]
-        response_list = [vars(arrival) for arrival in stop.stop_times]
-        for arrival in response_list:
-            # Convert timedelta back to 24 hour time
-            arrival['arrival_time'] = str(arrival['arrival_time'])
-            arrival['departure_time'] = str(arrival['departure_time'])
-            # Add missing trip fields to response
-            trip = schedule.trips_by_id(arrival['trip_id'])[0]
-            arrival['headsign'] = trip.trip_headsign
-            arrival['route'] = trip.route_id
-            arrival['shape'] = trip.shape_id
+        response_list = []
+        for stop_time in stop.stop_times:
+            response_list.append(vars(Arrival.from_stop_time(stop_time)))
         return jsonify_clean(response_list)
     except IndexError:
         abort(404)
