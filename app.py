@@ -79,6 +79,13 @@ def get_routes():
     return jsonify_clean([vars(route) for route in schedule.routes])
 
 
+@app.route('/thebus/api/v1.0/routes/shape/<string:route_id>', methods=['GET'])
+def get_route_shape(route_id):
+    route = schedule.routes_by_id(route_id)[0]
+    shape_id = route.trips[0].shape_id
+    return get_shape(shape_id)
+
+
 @app.route('/thebus/api/v1.0/shapes/<string:shape_id>', methods=['GET'])
 def get_shape(shape_id):
     return jsonify_clean([vars(shape) for shape in schedule.shapes if shape.shape_id == shape_id])
@@ -90,4 +97,4 @@ def get_trip(trip_id):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+    app.run()
