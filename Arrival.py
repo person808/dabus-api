@@ -3,7 +3,7 @@ class Arrival:
     def int_to_time(i):
         minutes, seconds = divmod(i, 60)
         hours, minutes = divmod(minutes, 60)
-        return f'{hours}:{minutes:02}:{seconds:02}'
+        return '{}:{:02}:{:02}'.format(hours, minutes, seconds)
 
     @classmethod
     def from_stop_time(cls, stop_time):

@@ -14,5 +14,5 @@ with open('gtfs.zip', mode='wb') as f:
         if chunk:  # filter out keep-alive new chunks
             f.write(chunk)
 
-subprocess.run(['gtfsdbloader', DATABASE_URI, '--load=gtfs.zip', '--lenient', f'--id={FEED_ID}'])
+subprocess.run(['gtfsdbloader', DATABASE_URI, '--load=gtfs.zip', '--lenient', '--id={}'.format(FEED_ID)])
 os.remove('gtfs.zip')
