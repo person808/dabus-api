@@ -1,7 +1,7 @@
 import requests
 import xmltodict
 from Arrival import Arrival
-from config import API_KEY, schedule
+from config import API_KEY, FEED_ID, dao
 from flask import Flask, abort, jsonify, make_response
 
 app = Flask(__name__)
@@ -25,7 +25,6 @@ def jsonify_clean(obj):
     from response."""
     return jsonify(remove_keys(obj, ['_sa_instance_state']))
 
-
 @app.errorhandler(404)
 def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
@@ -33,16 +32,13 @@ def not_found(error):
 
 @app.route('/thebus/api/v1.0/stops', methods=['GET'])
 def get_stops():
-    return jsonify_clean([vars(stop) for stop in schedule.stops])
+    return jsonify_clean([vars(stop) for stop in dao.stops(batch_size=900)])
 
 
-@app.route('/thebus/api/v1.0/stops/<int:stop_id>', methods=['GET'])
+@app.route('/thebus/api/v1.0/stops/<string:stop_id>', methods=['GET'])
 def get_stop(stop_id):
-    try:
-        stop = schedule.stops_by_id(stop_id)[0]
-        return jsonify_clean(vars(stop))
-    except IndexError:
-        abort(404)
+    stop = dao.stop(stop_id, FEED_ID)
+    return jsonify_clean(vars(stop))
 
 
 @app.route('/thebus/api/v1.0/arrivals/realtime/<int:stop_id>', methods=['GET'])
@@ -62,10 +58,10 @@ def get_realtime_stop_arrivals(stop_id):
 
 
 @app.route(
-    '/thebus/api/v1.0/arrivals/scheduled/<int:stop_id>', methods=['GET'])
+    '/thebus/api/v1.0/arrivals/scheduled/<string:stop_id>', methods=['GET'])
 def get_scheduled_stop_arrivals(stop_id):
     try:
-        stop = schedule.stops_by_id(stop_id)[0]
+        stop = dao.stop(stop_id, FEED_ID)
         response_list = []
         for stop_time in stop.stop_times:
             response_list.append(vars(Arrival.from_stop_time(stop_time)))
@@ -76,24 +72,25 @@ def get_scheduled_stop_arrivals(stop_id):
 
 @app.route('/thebus/api/v1.0/routes', methods=['GET'])
 def get_routes():
-    return jsonify_clean([vars(route) for route in schedule.routes])
+    return jsonify_clean([vars(route) for route in dao.routes()])
 
 
 @app.route('/thebus/api/v1.0/routes/shape/<string:route_id>', methods=['GET'])
 def get_route_shape(route_id):
-    route = schedule.routes_by_id(route_id)[0]
+    route = dao.route(route_id, FEED_ID)
     shape_id = route.trips[0].shape_id
     return get_shape(shape_id)
 
 
 @app.route('/thebus/api/v1.0/shapes/<string:shape_id>', methods=['GET'])
 def get_shape(shape_id):
-    return jsonify_clean([vars(shape) for shape in schedule.shapes if shape.shape_id == shape_id])
+    points = list(map(lambda x: vars(x), dao.shape(shape_id, FEED_ID).points))
+    return jsonify_clean(points)
 
 
 @app.route('/thebus/api/v1.0/trips/<string:trip_id>', methods=['GET'])
 def get_trip(trip_id):
-    return jsonify_clean(vars(schedule.trips_by_id(trip_id)[0]))
+    return jsonify_clean(vars(dao.trip(trip_id, FEED_ID)))
 
 
 if __name__ == '__main__':
