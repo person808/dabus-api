@@ -1,7 +1,7 @@
 import os
 import requests
 import subprocess
-from config import DATABASE_URI
+from config import DATABASE_URI, FEED_ID
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -14,5 +14,5 @@ with open('gtfs.zip', mode='wb') as f:
         if chunk:  # filter out keep-alive new chunks
             f.write(chunk)
 
-subprocess.run(['gtfs2db', 'overwrite', 'gtfs.zip', DATABASE_URI])
+subprocess.run(['gtfsdbloader', DATABASE_URI, '--load=gtfs.zip', '--lenient', f'--id={FEED_ID}'])
 os.remove('gtfs.zip')
