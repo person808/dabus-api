@@ -25,6 +25,7 @@ def jsonify_clean(obj):
     from response."""
     return jsonify(remove_keys(obj, ['_sa_instance_state']))
 
+
 @app.errorhandler(404)
 def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
@@ -37,8 +38,11 @@ def get_stops():
 
 @app.route('/thebus/api/v1.0/stops/<string:stop_id>', methods=['GET'])
 def get_stop(stop_id):
-    stop = dao.stop(stop_id, FEED_ID)
-    return jsonify_clean(vars(stop))
+    try:
+        stop = dao.stop(stop_id, FEED_ID)
+        return jsonify_clean(vars(stop))
+    except TypeError:
+        abort(404)
 
 
 @app.route('/thebus/api/v1.0/arrivals/realtime/<int:stop_id>', methods=['GET'])
@@ -66,7 +70,7 @@ def get_scheduled_stop_arrivals(stop_id):
         for stop_time in stop.stop_times:
             response_list.append(vars(Arrival.from_stop_time(stop_time)))
         return jsonify_clean(response_list)
-    except IndexError:
+    except AttributeError:
         abort(404)
 
 
@@ -77,20 +81,29 @@ def get_routes():
 
 @app.route('/thebus/api/v1.0/routes/shape/<string:route_id>', methods=['GET'])
 def get_route_shape(route_id):
-    route = dao.route(route_id, FEED_ID)
-    shape_id = route.trips[0].shape_id
-    return get_shape(shape_id)
+    try:
+        route = dao.route(route_id, FEED_ID)
+        shape_id = route.trips[0].shape_id
+        return get_shape(shape_id)
+    except AttributeError:
+        abort(404)
 
 
 @app.route('/thebus/api/v1.0/shapes/<string:shape_id>', methods=['GET'])
 def get_shape(shape_id):
-    points = list(map(lambda x: vars(x), dao.shape(shape_id, FEED_ID).points))
-    return jsonify_clean(points)
+    try:
+        points = list(map(lambda x: vars(x), dao.shape(shape_id, FEED_ID).points))
+        return jsonify_clean(points)
+    except AttributeError:
+        abort(404)
 
 
 @app.route('/thebus/api/v1.0/trips/<string:trip_id>', methods=['GET'])
 def get_trip(trip_id):
-    return jsonify_clean(vars(dao.trip(trip_id, FEED_ID)))
+    try:
+        return jsonify_clean(remove_keys(vars(dao.trip(trip_id, FEED_ID)), 'stop_times'))
+    except TypeError:
+        abort(404)
 
 
 if __name__ == '__main__':
