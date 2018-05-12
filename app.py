@@ -81,7 +81,7 @@ def get_routes():
     return jsonify_clean([vars(route) for route in dao.routes()])
 
 
-@app.route('/thebus/api/v1.0/routes/shape/<string:route_id>', methods=['GET'])
+@app.route('/thebus/api/v1.0/routes/<string:route_id>/shape', methods=['GET'])
 def get_route_shape(route_id):
     try:
         route = dao.route(route_id, FEED_ID)
