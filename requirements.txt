@@ -1,5 +1,5 @@
-Flask==0.12.2
-gunicorn==19.7.1
+Flask==1.0.2
+gunicorn==19.8.1
 gtfslib==1.0.0
-requests==2.9.1
+requests==2.18.4
 xmltodict==0.11.0
