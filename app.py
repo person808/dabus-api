@@ -1,8 +1,10 @@
 import requests
 import xmltodict
+from flask import Flask, abort, jsonify, make_response
+from gtfslib.model import Stop, StopTime, Trip
+
 from Arrival import Arrival
 from config import API_KEY, FEED_ID, dao
-from flask import Flask, abort, jsonify, make_response
 
 app = Flask(__name__)
 
@@ -85,6 +87,18 @@ def get_route_shape(route_id):
         route = dao.route(route_id, FEED_ID)
         shape_id = route.trips[0].shape_id
         return get_shape(shape_id)
+    except AttributeError:
+        abort(404)
+
+
+@app.route('/thebus/api/v1.0/routes/<string:route_id>/stops', methods=['GET'])
+def get_route_stops(route_id):
+    try:
+        stops = dao.stops(fltr=(StopTime.trip_id == Trip.trip_id) \
+                          & (Trip.route_id == route_id) \
+                          & (StopTime.stop_id == Stop.stop_id))
+        stop_set = [vars(stop) for stop in stops]
+        return jsonify_clean(stop_set)
     except AttributeError:
         abort(404)
 
