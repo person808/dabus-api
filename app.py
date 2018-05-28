@@ -119,7 +119,7 @@ def get_trip(trip_id):
     except TypeError:
         abort(404)
 
-@app.route('/thebus/api/v1.0/vehicles/realtime/<int:vehicle_id>', methods=['GET'])
+@app.route('/thebus/api/v1.0/vehicles/realtime/<string:vehicle_id>', methods=['GET'])
 def get_realtime_vehicle(vehicle_id):
     url_parameters = {'key': API_KEY, 'num': vehicle_id}
     try:
@@ -130,9 +130,13 @@ def get_realtime_vehicle(vehicle_id):
     # Get xml tree from response and convert it to a dictionary
     response_dict = xmltodict.parse(response.text)
     if 'vehicle' in response_dict['vehicles']:
-        return jsonify_clean(response_dict['vehicles']['vehicle'])
+        # In some cases the api returns old vehicle data. Always use the new one.
+        if isinstance(response_dict['vehicles']['vehicle'], list):
+            return jsonify_clean(response_dict['vehicles']['vehicle'][0])
+        else:
+            return jsonify_clean(response_dict['vehicles']['vehicle'])
     else:
-        return jsonify_clean([])
+        return jsonify_clean(response_dict)
 
 if __name__ == '__main__':
     app.run()
