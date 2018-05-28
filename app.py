@@ -1,5 +1,6 @@
 import requests
 import xmltodict
+from datetime import datetime
 from flask import Flask, abort, jsonify, make_response
 from gtfslib.model import Stop, StopTime, Trip
 
@@ -119,6 +120,7 @@ def get_trip(trip_id):
     except TypeError:
         abort(404)
 
+
 @app.route('/thebus/api/v1.0/vehicles/realtime/<string:vehicle_id>', methods=['GET'])
 def get_realtime_vehicle(vehicle_id):
     url_parameters = {'key': API_KEY, 'num': vehicle_id}
@@ -130,13 +132,18 @@ def get_realtime_vehicle(vehicle_id):
     # Get xml tree from response and convert it to a dictionary
     response_dict = xmltodict.parse(response.text)
     if 'vehicle' in response_dict['vehicles']:
+        vehicle_response = response_dict['vehicles']['vehicle']
         # In some cases the api returns old vehicle data. Always use the new one.
-        if isinstance(response_dict['vehicles']['vehicle'], list):
+        if isinstance(vehicle_response, list):
+            vehicle_response.sort(
+                key=lambda x: datetime.strptime(x['last_message'], '%m/%d/%Y %I:%M:%S %p'),
+                reverse=True)
             return jsonify_clean(response_dict['vehicles']['vehicle'][0])
         else:
-            return jsonify_clean(response_dict['vehicles']['vehicle'])
+            return jsonify_clean(vehicle_response)
     else:
         return jsonify_clean(response_dict)
+
 
 if __name__ == '__main__':
     app.run()
