@@ -95,8 +95,8 @@ def get_route_shape(route_id):
 @app.route('/thebus/api/v1.0/routes/<string:route_id>/stops', methods=['GET'])
 def get_route_stops(route_id):
     try:
-        stops = dao.stops(fltr=(StopTime.trip_id == Trip.trip_id) \
-                          & (Trip.route_id == route_id) \
+        stops = dao.stops(fltr=(StopTime.trip_id == Trip.trip_id)
+                          & (Trip.route_id == route_id)
                           & (StopTime.stop_id == Stop.stop_id))
         stop_set = [vars(stop) for stop in stops]
         return jsonify_clean(stop_set)
@@ -113,12 +113,8 @@ def get_shape(shape_id):
         abort(404)
 
 
-@app.route('/thebus/api/v1.0/trips/<string:trip_id>', methods=['GET'])
 def get_trip(trip_id):
-    try:
-        return jsonify_clean(remove_keys(vars(dao.trip(trip_id, FEED_ID)), 'stop_times'))
-    except TypeError:
-        abort(404)
+    return remove_keys(vars(dao.trip(trip_id, FEED_ID)), 'stop_times')
 
 
 @app.route('/thebus/api/v1.0/vehicles/realtime/<string:vehicle_id>', methods=['GET'])
@@ -138,8 +134,10 @@ def get_realtime_vehicle(vehicle_id):
             vehicle_response.sort(
                 key=lambda x: datetime.strptime(x['last_message'], '%m/%d/%Y %I:%M:%S %p'),
                 reverse=True)
+            vehicle_response[0]['trip'] = get_trip(vehicle_response[0]['trip'])
             return jsonify_clean(response_dict['vehicles']['vehicle'][0])
         else:
+            vehicle_response['trip'] = get_trip(vehicle_response['trip'])
             return jsonify_clean(vehicle_response)
     else:
         return jsonify_clean(response_dict)
